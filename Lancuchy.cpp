@@ -119,6 +119,28 @@ void kopiuj_lancuch_od_do(char* tab1, char* tab2, int X, int Y) {
 		popfd;
 	}
 }
+
+void licz_2022(const unsigned short* tab, int* wynik, int size) {
+    __asm {
+        pushfd;
+        mov edi, tab;        // EDI = adres tablicy
+        mov ecx, size;       // ECX = liczba elementów
+        mov ax, 2022;        // AX = szukana wartość 2022
+        xor ebx, ebx;        // EBX = licznik wystąpień = 0
+
+    petla:
+        repne scasw;         // szukaj 2022 w tablicy, zmniejszając ECX
+        jne koniec;          // jeśli ECX = 0 i nie znaleziono, koniec
+        inc ebx;             // znaleziono 2022 -> inkrementuj licznik
+        jmp petla;           // szukaj dalej
+
+    koniec:
+        mov edx, wynik;      // EDX = adres wyniku
+        mov [edx], ebx;      // zapisz licznik do *wynik
+        popfd;
+    }
+}
+
 int main() {
 	// Pierwsze wystąpienie znaku
 	char tab[] = "helllo world!";

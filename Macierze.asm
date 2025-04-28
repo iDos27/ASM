@@ -86,7 +86,7 @@ _cols_loop:
 	ret
 asmMulMatVec32 ENDP
 
-
+; MNOZENIE MACIERZY
 ; RCX	<- int ** W
 ; RDX	<- int ** A
 ; R8 	<- int ** B
@@ -117,4 +117,68 @@ _common_loop:
 	jnz _aRows_loop
 	ret
 asmMulMatMat32 ENDP
+
+; Zerowanie przekątnej macierzy int32
+; RCX <- int** W
+; RDX <- int   rows
+; R8  <- int   cols
+asmZeroMat32 PROC USES rsi, W:qword, rows:dword, cols:dword
+	mov r9, rdx				; r9 = rows
+_rows_loop:
+	cmp r9, 0
+	je _done
+
+	mov rsi, qword ptr [rcx + 8 * r9 - 8]	; rsi = W[i]
+	
+	; Zeruj tylko W[i][i]
+	mov dword ptr [rsi + 4 * r9 - 4], 0
+
+	dec r9					; i--
+	jmp _rows_loop
+
+_done:
+	ret
+asmZeroMat32 ENDP
+
+; Ustawianie 0 na przekątnej, a reszta to 1
+; RCX <- int** W
+; RDX <- int   rows
+; R8  <- int   cols
+asmZeroOneMat32 PROC USES rsi, W:qword, rows:dword, cols:dword
+	mov r9, rdx				; r9 = rows
+_rows_loop:
+	cmp r9, 0
+	je _done
+
+	mov rsi, qword ptr [rcx + 8 * r9 - 8]	; rsi = W[i]
+
+	mov r10, r8				; r10 = cols
+_cols_loop:
+	cmp r10, 0
+	je _next_row
+
+	; Sprawdzamy, czy jesteśmy na przekątnej
+	cmp r9, r10
+	je _on_diag		; Jeśli i == j, przejdź do ustawiania przekątnej
+
+	; Jeśli nie na przekątnej, ustaw 1
+	mov dword ptr [rsi + 4 * r10 - 4], 1
+	jmp _next_col
+
+_on_diag:
+	mov dword ptr [rsi + 4 * r10 - 4], 0
+
+_next_col:
+	dec r10					; j--
+	jnz _cols_loop
+
+_next_row:
+	dec r9					; i--
+	jnz _rows_loop
+
+_done:
+	ret
+asmZeroOneMat32 ENDP
+
+
 END
